@@ -5,6 +5,7 @@ from board import Board
 from dragger import Dragger
 from config import Config
 from square import Square
+from stockfish_ai import StockfishAI
 
 class Game:
 
@@ -14,6 +15,8 @@ class Game:
         self.board = Board()
         self.dragger = Dragger()
         self.config = Config()
+        self.ai = StockfishAI(self)
+        self.gamemode = 'ai'  # 'ai' or 'pvp'
 
     # blit methods
 
@@ -64,6 +67,14 @@ class Game:
                         piece.texture_rect = img.get_rect(center=img_center)
                         surface.blit(img, piece.texture_rect)
 
+    def show_thinking(self, surface):
+        if self.ai.thinking:
+            font = pygame.font.SysFont('Arial', 32)
+            text = font.render('Thinking...', True, (255, 255, 255))
+            text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+            pygame.draw.rect(surface, (0, 0, 0), text_rect.inflate(20, 20))
+            surface.blit(text, text_rect)
+
     def show_moves(self, surface):
         theme = self.config.theme
 
@@ -107,6 +118,19 @@ class Game:
 
     def next_turn(self):
         self.next_player = 'white' if self.next_player == 'black' else 'black'
+        # If it's AI's turn (black), make AI move
+        if self.gamemode == 'ai' and self.next_player == 'black':
+            ai_move = self.ai.get_ai_move()
+            if ai_move:
+                initial = ai_move.initial
+                final = ai_move.final
+                piece = self.board.squares[initial.row][initial.col].piece
+                # Make the move
+                self.board.move(piece, ai_move)
+                # Play move sound
+                self.play_sound(self.board.squares[final.row][final.col].has_piece())
+                # Change turn
+                self.next_turn()
 
     def set_hover(self, row, col):
         self.hovered_sqr = self.board.squares[row][col]

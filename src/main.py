@@ -28,6 +28,7 @@ class Main:
             game.show_moves(screen)
             game.show_pieces(screen)
             game.show_hover(screen)
+            game.show_thinking(screen)
 
             if dragger.dragging:
                 dragger.update_blit(screen)
